@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyCentroidModule &mdash; Centroid 0.0.01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Centroid
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">MyCentroidModule</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Centroid</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">MyCentroidModule</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for MyCentroidModule</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="c1"># from re import X</span>
+<span class="c1">#from socket import getnameinfo</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">vtk</span>
+<span class="c1">#import qt</span>
+<span class="kn">import</span> <span class="nn">slicer</span>
+<span class="c1"># # from slicer.i18n import tr as _</span>
+<span class="c1"># # from slicer.i18n import translate</span>
+<span class="c1"># #from slicer.ScriptedLoadableModule import *</span>
+<span class="c1">#from slicer.util import VTKObservationMixin</span>
+<span class="c1"># from slicer.parameterNodeWrapper import (</span>
+<span class="c1">#       parameterNodeWrapper,</span>
+<span class="c1">#       WithinRange,</span>
+<span class="c1">#   )</span>
+
+<span class="c1"># from slicer import vtkMRMLMarkupsFiducialNode</span>
+<span class="c1"># from slicer import vtkMRMLScalarVolumeNode</span>
+<span class="c1"># # </span>
+
+<span class="c1"># r1 = slicer.util.getNode(&quot;F&quot;)</span>
+<span class="c1"># r2 = slicer.util.getNode(&quot;F_1&quot;)</span>
+<span class="c1"># r3 = slicer.util.getNode(&quot;F_2&quot;)</span>
+
+<span class="c1">#</span>
+<span class="c1"># MyCentroidModule</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="MyCentroidModule"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModule">[docs]</a><span class="k">class</span> <span class="nc">MyCentroidModule</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses ScriptedLoadableModule base class, available at:</span>
+<span class="sd">    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="n">ScriptedLoadableModule</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;MyCentroidModule&quot;</span><span class="p">)</span>  <span class="c1"># TODO: make this more human readable by adding spaces</span>
+        <span class="c1"># TODO: set categories (folders where the module shows up in the module selector)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">categories</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Examples_1&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># TODO: add here list of module names that this module requires</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">contributors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;John Doe (AnyWare Corp.)&quot;</span><span class="p">]</span>  <span class="c1"># TODO: replace with &quot;Firstname Lastname (Organization)&quot;</span>
+        <span class="c1"># TODO: update with short description of the module and a link to online module documentation</span>
+        <span class="c1"># _() function marks text as translatable to other languages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">helpText</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">This is an example of scripted loadable module bundled in an extension.</span>
+<span class="s2">See more information in &lt;a href=&quot;https://github.com/organization/projectname#MyCentroidModule&quot;&gt;module documentation&lt;/a&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># TODO: replace with organization, grant and thanks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">acknowledgementText</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,</span>
+<span class="s2">and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Additional initialization step after application startup is complete</span>
+        <span class="n">slicer</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;startupCompleted()&quot;</span><span class="p">,</span> <span class="n">registerSampleData</span><span class="p">)</span></div>
+
+
+<span class="c1">#</span>
+<span class="c1"># Register sample data sets in Sample Data module</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="registerSampleData"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.registerSampleData">[docs]</a><span class="k">def</span> <span class="nf">registerSampleData</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add data sets to Sample Data module.&quot;&quot;&quot;</span>
+    <span class="c1"># It is always recommended to provide sample data for users to make it easy to try the module,</span>
+    <span class="c1"># but if no sample data is available then this method (and associated startupCompeted signal connection) can be removed.</span>
+
+    <span class="kn">import</span> <span class="nn">SampleData</span>
+
+    <span class="n">iconsPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;Resources/Icons&quot;</span><span class="p">)</span>
+
+    <span class="c1"># To ensure that the source code repository remains small (can be downloaded and installed quickly)</span>
+    <span class="c1"># it is recommended to store data sets that are larger than a few MB in a Github release.</span>
+
+    <span class="c1"># MyCentroidModule1</span>
+    <span class="n">SampleData</span><span class="o">.</span><span class="n">SampleDataLogic</span><span class="o">.</span><span class="n">registerCustomSampleDataSource</span><span class="p">(</span>
+        <span class="c1"># Category and sample name displayed in Sample Data module</span>
+        <span class="n">category</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule&quot;</span><span class="p">,</span>
+        <span class="n">sampleName</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule1&quot;</span><span class="p">,</span>
+        <span class="c1"># Thumbnail should have size of approximately 260x280 pixels and stored in Resources/Icons folder.</span>
+        <span class="c1"># It can be created by Screen Capture module, &quot;Capture all views&quot; option enabled, &quot;Number of images&quot; set to &quot;Single&quot;.</span>
+        <span class="n">thumbnailFileName</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">iconsPath</span><span class="p">,</span> <span class="s2">&quot;MyCentroidModule1.png&quot;</span><span class="p">),</span>
+        <span class="c1"># Download URL and target file name</span>
+        <span class="n">uris</span><span class="o">=</span><span class="s2">&quot;https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95&quot;</span><span class="p">,</span>
+        <span class="n">fileNames</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule1.nrrd&quot;</span><span class="p">,</span>
+        <span class="c1"># Checksum to ensure file integrity. Can be computed by this command:</span>
+        <span class="c1">#  import hashlib; print(hashlib.sha256(open(filename, &quot;rb&quot;).read()).hexdigest())</span>
+        <span class="n">checksums</span><span class="o">=</span><span class="s2">&quot;SHA256:998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95&quot;</span><span class="p">,</span>
+        <span class="c1"># This node name will be used when the data set is loaded</span>
+        <span class="n">nodeNames</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule1&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># MyCentroidModule2</span>
+    <span class="n">SampleData</span><span class="o">.</span><span class="n">SampleDataLogic</span><span class="o">.</span><span class="n">registerCustomSampleDataSource</span><span class="p">(</span>
+        <span class="c1"># Category and sample name displayed in Sample Data module</span>
+        <span class="n">category</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule&quot;</span><span class="p">,</span>
+        <span class="n">sampleName</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule2&quot;</span><span class="p">,</span>
+        <span class="n">thumbnailFileName</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">iconsPath</span><span class="p">,</span> <span class="s2">&quot;MyCentroidModule2.png&quot;</span><span class="p">),</span>
+        <span class="c1"># Download URL and target file name</span>
+        <span class="n">uris</span><span class="o">=</span><span class="s2">&quot;https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97&quot;</span><span class="p">,</span>
+        <span class="n">fileNames</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule2.nrrd&quot;</span><span class="p">,</span>
+        <span class="n">checksums</span><span class="o">=</span><span class="s2">&quot;SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97&quot;</span><span class="p">,</span>
+        <span class="c1"># This node name will be used when the data set is loaded</span>
+        <span class="n">nodeNames</span><span class="o">=</span><span class="s2">&quot;MyCentroidModule2&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1">#</span>
+<span class="c1"># MyCentroidModuleParameterNode</span>
+<span class="c1">#</span>
+
+
+<span class="c1">#@parameterNodeWrapper</span>
+<div class="viewcode-block" id="MyCentroidModuleParameterNode"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleParameterNode">[docs]</a><span class="k">class</span> <span class="nc">MyCentroidModuleParameterNode</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The parameters needed by module.</span>
+
+<span class="sd">    inputVolume - The volume to threshold.</span>
+<span class="sd">    imageThreshold - The value at which to threshold the input volume.</span>
+<span class="sd">    invertThreshold - If true, will invert the threshold.</span>
+<span class="sd">    thresholdedVolume - The output volume that will contain the thresholded volume.</span>
+<span class="sd">    invertedVolume - The output volume that will contain the inverted thresholded volume.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+    <span class="c1"># inputVolume: vtkMRMLMarkupsFiducialNode</span>
+    <span class="c1"># inputVolume1: vtkMRMLMarkupsFiducialNode</span>
+    <span class="c1"># inputVolume2: vtkMRMLMarkupsFiducialNode</span>
+    <span class="c1"># imageThreshold: Annotated[float, WithinRange(-100, 500)] = 100</span>
+    <span class="c1"># invertThreshold: bool = False</span>
+    <span class="c1"># thresholdedVolume: vtkMRMLScalarVolumeNode</span>
+    <span class="c1"># invertedVolume: vtkMRMLScalarVolumeNode</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># MyCentroidModuleWidget</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="MyCentroidModuleWidget"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget">[docs]</a><span class="k">class</span> <span class="nc">MyCentroidModuleWidget</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses ScriptedLoadableModuleWidget base class, available at:</span>
+<span class="sd">    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when the user opens the module the first time and the widget is initialized.&quot;&quot;&quot;</span>
+        <span class="n">ScriptedLoadableModuleWidget</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="n">VTKObservationMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># needed for parameter node observation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logic</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNodeGuiTag</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.setup"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when the user opens the module the first time and the widget is initialized.&quot;&quot;&quot;</span>
+        <span class="n">ScriptedLoadableModuleWidget</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Load widget from .ui file (created by Qt Designer).</span>
+        <span class="c1"># Additional widgets can be instantiated manually and added to self.layout.</span>
+        <span class="n">uiWidget</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">loadUI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resourcePath</span><span class="p">(</span><span class="s2">&quot;UI/MyCentroidModule.ui&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">uiWidget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">childWidgetVariables</span><span class="p">(</span><span class="n">uiWidget</span><span class="p">)</span>
+
+        <span class="c1"># Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget&#39;s</span>
+        <span class="c1"># &quot;mrmlSceneChanged(vtkMRMLScene*)&quot; signal in is connected to each MRML widget&#39;s.</span>
+        <span class="c1"># &quot;setMRMLScene(vtkMRMLScene*)&quot; slot.</span>
+        <span class="n">uiWidget</span><span class="o">.</span><span class="n">setMRMLScene</span><span class="p">(</span><span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="p">)</span>
+
+        <span class="c1"># Create logic class. Logic implements all computations that should be possible to run</span>
+        <span class="c1"># in batch mode, without a graphical user interface.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logic</span> <span class="o">=</span> <span class="n">MyCentroidModuleLogic</span><span class="p">()</span>
+
+        <span class="c1"># Connections</span>
+
+        <span class="c1"># These connections ensure that we update parameter node when scene is closed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addObserver</span><span class="p">(</span><span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="p">,</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">StartCloseEvent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">onSceneStartClose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addObserver</span><span class="p">(</span><span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="p">,</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">EndCloseEvent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">onSceneEndClose</span><span class="p">)</span>
+
+        <span class="c1"># Buttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">applyButton</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;clicked(bool)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">onApplyButton</span><span class="p">)</span>
+
+        <span class="c1"># Make sure parameter node is initialized (needed for module reload)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initializeParameterNode</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.cleanup"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when the application closes and the module widget is destroyed.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeObservers</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.enter"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.enter">[docs]</a>    <span class="k">def</span> <span class="nf">enter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called each time the user opens this module.&quot;&quot;&quot;</span>
+        <span class="c1"># Make sure parameter node exists and observed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initializeParameterNode</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.exit"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.exit">[docs]</a>    <span class="k">def</span> <span class="nf">exit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called each time the user opens a different module.&quot;&quot;&quot;</span>
+        <span class="c1"># Do not react to parameter node changes (GUI will be updated when the user enters into the module)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">disconnectGui</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameterNodeGuiTag</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNodeGuiTag</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">,</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCommand</span><span class="o">.</span><span class="n">ModifiedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkCanApply</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.onSceneStartClose"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.onSceneStartClose">[docs]</a>    <span class="k">def</span> <span class="nf">onSceneStartClose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called just before the scene is closed.&quot;&quot;&quot;</span>
+        <span class="c1"># Parameter node will be reset, do not use it anymore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParameterNode</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.onSceneEndClose"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.onSceneEndClose">[docs]</a>    <span class="k">def</span> <span class="nf">onSceneEndClose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called just after the scene is closed.&quot;&quot;&quot;</span>
+        <span class="c1"># If this module is shown while the scene is closed then recreate a new parameter node immediately</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">isEntered</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initializeParameterNode</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.initializeParameterNode"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.initializeParameterNode">[docs]</a>    <span class="k">def</span> <span class="nf">initializeParameterNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure parameter node exists and observed.&quot;&quot;&quot;</span>
+        <span class="c1"># Parameter node stores all user choices in parameter values, node selections, etc.</span>
+        <span class="c1"># so that when the scene is saved and reloaded, these settings are restored.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParameterNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logic</span><span class="o">.</span><span class="n">getParameterNode</span><span class="p">())</span>
+
+        <span class="c1"># Select default input nodes if nothing is selected yet to save a few clicks for the user</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume</span><span class="p">:</span>
+            <span class="n">firstVolumeNode</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">GetFirstNodeByClass</span><span class="p">(</span><span class="s2">&quot;vtkMRMLScalarVolumeNode&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">firstVolumeNode</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume</span> <span class="o">=</span> <span class="n">firstVolumeNode</span>
+
+
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume1</span><span class="p">:</span>
+             <span class="n">firstVolumeNode1</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">GetFirstNodeByClass</span><span class="p">(</span><span class="s2">&quot;vtkMRMLScalarVolumeNode&quot;</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">firstVolumeNode1</span><span class="p">:</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume1</span> <span class="o">=</span> <span class="n">firstVolumeNode1</span>
+
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume2</span><span class="p">:</span>
+             <span class="n">firstVolumeNode2</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">GetFirstNodeByClass</span><span class="p">(</span><span class="s2">&quot;vtkMRMLScalarVolumeNode&quot;</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">firstVolumeNode2</span><span class="p">:</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume2</span> <span class="o">=</span> <span class="n">firstVolumeNode2</span>        </div>
+
+
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.setParameterNode"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.setParameterNode">[docs]</a>    <span class="k">def</span> <span class="nf">setParameterNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputParameterNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set and observe parameter node.</span>
+<span class="sd">        Observation is needed because when the parameter node is changed then the GUI must be updated immediately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">disconnectGui</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameterNodeGuiTag</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">,</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCommand</span><span class="o">.</span><span class="n">ModifiedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkCanApply</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span> <span class="o">=</span> <span class="n">inputParameterNode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">:</span>
+            <span class="c1"># Note: in the .ui file, a Qt dynamic property called &quot;SlicerParameterName&quot; is set on each</span>
+            <span class="c1"># ui element that needs connection.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNodeGuiTag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">connectGui</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addObserver</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="p">,</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCommand</span><span class="o">.</span><span class="n">ModifiedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkCanApply</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_checkCanApply</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.getCentroid"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.getCentroid">[docs]</a>    <span class="k">def</span> <span class="nf">getCentroid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span><span class="n">r2</span><span class="p">,</span><span class="n">r3</span><span class="p">):</span>
+      
+        <span class="n">centroid</span><span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">s</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">o</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r1</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">p</span> <span class="o">=</span> <span class="n">r1</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r2</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">s</span> <span class="o">=</span> <span class="n">r2</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">o</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>     
+        <span class="n">x</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+        <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+        <span class="n">z</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+         
+        <span class="n">centroid</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">centroid</span></div>
+
+    
+
+
+
+    <span class="k">def</span> <span class="nf">_checkCanApply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">applyButton</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterNode</span><span class="o">.</span><span class="n">inputVolume2</span>
+
+<div class="viewcode-block" id="MyCentroidModuleWidget.onApplyButton"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleWidget.onApplyButton">[docs]</a>    <span class="k">def</span> <span class="nf">onApplyButton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run processing when user clicks &quot;Apply&quot; button.&quot;&quot;&quot;</span>
+        <span class="c1">#with slicer.util.tryWithErrorDisplay((&quot;Failed to compute results.&quot;), waitCursor=True):</span>
+            <span class="c1"># Compute output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logic</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">inputSelector</span><span class="o">.</span><span class="n">currentNode</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">inputSelector_1</span><span class="o">.</span><span class="n">currentNode</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">inputSelector_2</span><span class="o">.</span><span class="n">currentNode</span><span class="p">()</span>
+                               <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">CentroidLabel</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getCentroid</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="n">r2</span><span class="p">,</span><span class="n">r3</span><span class="p">))</span></div></div>
+            <span class="c1"># Compute inverted output (if needed)</span>
+            <span class="c1"># if self.ui.invertedOutputSelector.currentNode():</span>
+            <span class="c1">#     # If additional output volume is selected then result with inverted threshold is written there</span>
+            <span class="c1">#     self.logic.process(self.ui.inputSelector.currentNode(), self.ui.invertedOutputSelector.currentNode(),</span>
+            <span class="c1">#                        self.ui.imageThresholdSliderWidget.value, not self.ui.invertOutputCheckBox.checked, showResult=False)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># MyCentroidModuleLogic</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="MyCentroidModuleLogic"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleLogic">[docs]</a><span class="k">class</span> <span class="nc">MyCentroidModuleLogic</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class should implement all the actual</span>
+<span class="sd">    computation done by your module.  The interface</span>
+<span class="sd">    should be such that other python code can import</span>
+<span class="sd">    this class and make use of the functionality without</span>
+<span class="sd">    requiring an instance of the Widget.</span>
+<span class="sd">    Uses ScriptedLoadableModuleLogic base class, available at:</span>
+<span class="sd">    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when the logic class is instantiated. Can be used for initializing member variables.&quot;&quot;&quot;</span>
+        <span class="n">ScriptedLoadableModuleLogic</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MyCentroidModuleLogic.getParameterNode"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleLogic.getParameterNode">[docs]</a>    <span class="k">def</span> <span class="nf">getParameterNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MyCentroidModuleParameterNode</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">getParameterNode</span><span class="p">())</span></div>
+    
+<div class="viewcode-block" id="MyCentroidModuleLogic.getCentroid"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleLogic.getCentroid">[docs]</a>    <span class="k">def</span> <span class="nf">getCentroid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span><span class="n">r2</span><span class="p">,</span><span class="n">r3</span><span class="p">):</span>
+      
+        <span class="n">centroid</span><span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">s</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">o</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r1</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">p</span> <span class="o">=</span> <span class="n">r1</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r2</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">s</span> <span class="o">=</span> <span class="n">r2</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">GetNumberOfControlPoints</span><span class="p">()):</span>
+             <span class="n">o</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">GetNthControlPointPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    
+        <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> 
+        <span class="n">x</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+        <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+        <span class="n">z</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">o</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">3</span>
+         
+        <span class="n">centroid</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">centroid</span></div>
+
+
+
+
+
+    
+
+<div class="viewcode-block" id="MyCentroidModuleLogic.process"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleLogic.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">inputVolume</span><span class="p">,</span><span class="n">inputVolume1</span><span class="p">,</span> <span class="n">inputVolume2</span><span class="p">,</span>
+                 <span class="c1">#outputVolume: vtkMRMLScalarVolumeNode,</span>
+                 <span class="n">invert</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">showResult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the processing algorithm.</span>
+<span class="sd">        Can be used without GUI widget.</span>
+<span class="sd">        :param inputVolume: volume to be thresholded</span>
+<span class="sd">        :param outputVolume: thresholding result</span>
+<span class="sd">        :param imageThreshold: values above/below this threshold will be set to 0</span>
+<span class="sd">        :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0</span>
+<span class="sd">        :param showResult: show output volume in slice viewers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centroid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCentroid</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="n">r2</span><span class="p">,</span><span class="n">r3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputVolume</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">inputVolume1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">inputVolume2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">outputVolume</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input or output volume is invalid&quot;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">time</span>
+
+        <span class="n">startTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing started&quot;</span><span class="p">)</span>
+
+         <span class="c1"># Compute the thresholded output volume using the &quot;Threshold Scalar Volume&quot; CLI module</span>
+        <span class="n">cliParams</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="s2">&quot;inputVolume&quot;</span><span class="p">:</span> <span class="n">inputVolume</span><span class="o">.</span><span class="n">GetID</span><span class="p">(),</span>
+            <span class="s2">&quot;inputVolume1&quot;</span><span class="p">:</span> <span class="n">inputVolume1</span><span class="o">.</span><span class="n">GetID</span><span class="p">(),</span>
+             <span class="s2">&quot;inputVolume2&quot;</span><span class="p">:</span> <span class="n">inputVolume2</span><span class="o">.</span><span class="n">GetID</span><span class="p">(),</span>
+            <span class="s2">&quot;OutputVolume&quot;</span><span class="p">:</span> <span class="n">outputVolume</span><span class="o">.</span><span class="n">GetID</span><span class="p">(),</span>
+            <span class="c1">#&quot;ThresholdValue&quot;: imageThreshold,</span>
+             <span class="s2">&quot;ThresholdType&quot;</span><span class="p">:</span> <span class="s2">&quot;Above&quot;</span> <span class="k">if</span> <span class="n">invert</span> <span class="k">else</span> <span class="s2">&quot;Below&quot;</span><span class="p">,</span>
+         <span class="p">}</span>
+        <span class="n">cliNode</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">slicer</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">thresholdscalarvolume</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cliParams</span><span class="p">,</span> <span class="n">wait_for_completion</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_display</span><span class="o">=</span><span class="n">showResult</span><span class="p">)</span>
+         <span class="c1"># We don&#39;t need the CLI module node anymore, remove it to not clutter the scene with it</span>
+        <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">RemoveNode</span><span class="p">(</span><span class="n">cliNode</span><span class="p">)</span>
+
+        <span class="n">stopTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing completed in </span><span class="si">{</span><span class="n">stopTime</span><span class="o">-</span><span class="n">startTime</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="c1">#</span>
+<span class="c1"># MyCentroidModuleTest</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="MyCentroidModuleTest"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleTest">[docs]</a><span class="k">class</span> <span class="nc">MyCentroidModuleTest</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the test case for your scripted module.</span>
+<span class="sd">    Uses ScriptedLoadableModuleTest base class, available at:</span>
+<span class="sd">    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MyCentroidModuleTest.setUp"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleTest.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do whatever is needed to reset the state - typically a scene clear will be enough.&quot;&quot;&quot;</span>
+        <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">Clear</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleTest.runTest"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleTest.runTest">[docs]</a>    <span class="k">def</span> <span class="nf">runTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run as few or as many tests as needed here.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setUp</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_MyCentroidModule1</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MyCentroidModuleTest.test_MyCentroidModule1"><a class="viewcode-back" href="../MyCentroidModule.html#MyCentroidModule.MyCentroidModuleTest.test_MyCentroidModule1">[docs]</a>    <span class="k">def</span> <span class="nf">test_MyCentroidModule1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ideally you should have several levels of tests.  At the lowest level</span>
+<span class="sd">        tests should exercise the functionality of the logic with different inputs</span>
+<span class="sd">        (both valid and invalid).  At higher levels your tests should emulate the</span>
+<span class="sd">        way the user would interact with your code and confirm that it still works</span>
+<span class="sd">        the way you intended.</span>
+<span class="sd">        One of the most important features of the tests is that it should alert other</span>
+<span class="sd">        developers when their changes will have an impact on the behavior of your</span>
+<span class="sd">        module.  For example, if a developer removes a feature that you depend on,</span>
+<span class="sd">        your test should break so they know that the feature is needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delayDisplay</span><span class="p">(</span><span class="s2">&quot;Starting the test&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get/create input data</span>
+
+        <span class="kn">import</span> <span class="nn">SampleData</span>
+
+        <span class="n">registerSampleData</span><span class="p">()</span>
+       
+        <span class="n">inputVolume</span> <span class="o">=</span> <span class="n">SampleData</span><span class="o">.</span><span class="n">downloadSample</span><span class="p">(</span><span class="s2">&quot;MyCentroidModule1&quot;</span><span class="p">)</span>
+        <span class="n">inputVolume1</span> <span class="o">=</span> <span class="n">SampleData</span><span class="o">.</span><span class="n">downloadSample</span><span class="p">(</span><span class="s2">&quot;MyCentroidModule1&quot;</span><span class="p">)</span>
+        <span class="n">inputVolume2</span> <span class="o">=</span> <span class="n">SampleData</span><span class="o">.</span><span class="n">downloadSample</span><span class="p">(</span><span class="s2">&quot;MyCentroidModule1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delayDisplay</span><span class="p">(</span><span class="s2">&quot;Loaded test data set&quot;</span><span class="p">)</span>
+
+        <span class="n">inputScalarRange</span> <span class="o">=</span> <span class="n">inputVolume</span><span class="o">.</span><span class="n">GetImageData</span><span class="p">()</span><span class="o">.</span><span class="n">GetScalarRange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">inputScalarRange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">inputScalarRange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">695</span><span class="p">)</span>
+
+        <span class="n">outputVolume</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">mrmlScene</span><span class="o">.</span><span class="n">AddNewNodeByClass</span><span class="p">(</span><span class="s2">&quot;vtkMRMLScalarVolumeNode&quot;</span><span class="p">)</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="mi">100</span>
+
+        <span class="c1"># Test the module logic</span>
+
+        <span class="n">logic</span> <span class="o">=</span> <span class="n">MyCentroidModuleLogic</span><span class="p">()</span>
+
+        <span class="c1"># Test algorithm with non-inverted threshold</span>
+        <span class="n">logic</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">inputVolume</span><span class="p">,</span> <span class="n">inputVolume1</span><span class="p">,</span> <span class="n">inputVolume2</span><span class="p">,</span> <span class="n">outputVolume</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">outputScalarRange</span> <span class="o">=</span> <span class="n">outputVolume</span><span class="o">.</span><span class="n">GetImageData</span><span class="p">()</span><span class="o">.</span><span class="n">GetScalarRange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">outputScalarRange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inputScalarRange</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">outputScalarRange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">threshold</span><span class="p">)</span>
+
+        <span class="c1"># Test algorithm with inverted threshold</span>
+        <span class="n">logic</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">inputVolume</span><span class="p">,</span><span class="n">inputVolume1</span><span class="p">,</span><span class="n">inputVolume2</span><span class="p">,</span> <span class="n">outputVolume</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">outputScalarRange</span> <span class="o">=</span> <span class="n">outputVolume</span><span class="o">.</span><span class="n">GetImageData</span><span class="p">()</span><span class="o">.</span><span class="n">GetScalarRange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">outputScalarRange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inputScalarRange</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">outputScalarRange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">inputScalarRange</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delayDisplay</span><span class="p">(</span><span class="s2">&quot;Test passed&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Ebin Benny.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
